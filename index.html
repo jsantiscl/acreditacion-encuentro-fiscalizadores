@@ -597,12 +597,38 @@ async function flush(){
 }
 // Escrituras que requieren conexión (editar, eliminar, importar, borrar)
 async function direct(body){const r=await api("/api/op",body);if(r&&r.v)minV=Math.max(minV,r.v);await poll(true);return r}
+/* Frecuencia de sincronización: rápida mientras hay actividad, más espaciada si nadie usa la pantalla
+   y detenida con la pestaña oculta (salvo que haya registros pendientes de enviar). Así se ahorran
+   consultas a la base sin perder agilidad en la puerta. */
+let lastActivity=Date.now(),lastChange=Date.now(),lastPoll=0,syncTimer=null;
+const FAST=2500,MEDIUM=8000,SLOW=20000;
+function syncInterval(){
+  if(!CODE)return null;
+  if(document.hidden)return outbox.length?10000:null;
+  if(outbox.length)return 4000;
+  const idle=Date.now()-Math.max(lastActivity,lastChange);
+  return idle<2*60e3?FAST:idle<10*60e3?MEDIUM:SLOW;
+}
+function scheduleSync(){
+  clearTimeout(syncTimer);syncTimer=null;
+  const iv=syncInterval();if(iv==null)return;
+  syncTimer=setTimeout(async()=>{
+    if(outbox.length&&!flushing)await flush();else await poll(false);
+    scheduleSync();
+  },Math.max(0,iv-(Date.now()-lastPoll)));
+}
+function wakeSync(){
+  const was=syncInterval();lastActivity=Date.now();
+  // si estaba en modo lento, reprograma: consulta de inmediato si ya pasó el intervalo rápido
+  if(syncInterval()!==was)scheduleSync();
+}
 let polling=false;
 async function poll(force){
-  if(!CODE||polling&&!force)return;polling=true;
+  if(!CODE||polling&&!force)return;polling=true;lastPoll=Date.now();
   try{
     const j=await api("/api/state?v="+(force?-1:server.v));
     online=true;
+    if(!j.same)lastChange=Date.now();
     if(!j.same&&j.v>=minV){server={v:j.v,people:j.people||{},asis:{d1:{},d2:{},d3:{},...(j.asis||{})}};loaded=true;rebuild()}
     else if(!loaded&&j.same){loaded=true;rebuild()}
   }catch(e){
@@ -1130,11 +1156,13 @@ function start(){
     if(r.status===401){logout(j.error);return}
     if(r.ok&&(j.role!==ROLE||j.name!==MYNAME)){ROLE=j.role;MYNAME=j.name;MYUID=j.uid;LS.set("acr_role",ROLE);LS.set("acr_name",MYNAME);LS.set("acr_uid",MYUID);start()}
   }).catch(()=>{});
-  if(started){poll(true);flush();return}
+  lastActivity=Date.now();
+  if(started){poll(true);flush();scheduleSync();return}
   started=true;rebuild();poll(true);if(outbox.length)flush();
-  setInterval(()=>{if(outbox.length&&!flushing)flush();else poll(false)},2500);
-  document.addEventListener("visibilitychange",()=>{if(!document.hidden)poll(true)});
-  window.addEventListener("online",()=>flush());
+  scheduleSync();
+  ["pointerdown","keydown","input","touchstart","wheel"].forEach(ev=>document.addEventListener(ev,wakeSync,{passive:true,capture:true}));
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden){lastActivity=Date.now();poll(true).then(scheduleSync)}else scheduleSync()});
+  window.addEventListener("online",()=>{flush();scheduleSync()});
   window.addEventListener("beforeunload",e=>{if(outbox.length){e.preventDefault();e.returnValue=""}});
 }
 if(CODE)start();else logout();

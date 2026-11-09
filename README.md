@@ -11,7 +11,9 @@ App web para acreditar a los asistentes del encuentro organizado por SERVEL (16,
 - **Corte de internet**: las acreditaciones quedan guardadas en el computador y se envían solas cuando vuelve la conexión. La pestaña no se debe cerrar mientras haya registros pendientes.
 - **Lista y resumen** por institución y jornada, con **descarga a Excel**.
 - **Importar inscritos** desde Excel o CSV, o pegando filas. Detecta las columnas solo y no duplica personas al importar dos veces.
-- **Dos códigos de acceso**: uno para la puerta (acreditar y agregar personas) y otro de administración (importar, eliminar y borrar la base).
+- **Código personal por integrante del equipo**: cada acreditación queda registrada con el nombre de quien la hizo (lo fija el servidor según el código). Los códigos se crean y desactivan desde la pestaña **Equipo**, sin tocar Vercel.
+  - **Acreditador/a**: solo ve la pantalla de acreditar (buscar, acreditar, deshacer y agregar no inscritos).
+  - **Administrador/a**: todo lo anterior, más lista, Excel, importación, edición, equipo y borrado.
 
 ## Estructura
 
@@ -19,7 +21,8 @@ App web para acreditar a los asistentes del encuentro organizado por SERVEL (16,
 index.html          interfaz completa (HTML, CSS y JS sin dependencias de compilación)
 api/state.js        GET  lista y asistencias (responde solo si hubo cambios)
 api/op.js           POST todas las escrituras (acreditar, deshacer, crear, editar, importar…)
-api/auth.js         POST valida el código de acceso
+api/auth.js         POST valida el código y devuelve nombre y rol
+api/users.js        GET  equipo y códigos (solo administradores)
 api/_lib.js         conexión a Upstash Redis (REST), control de acceso y validación
 vendor/             SheetJS (lectura y escritura de Excel), servido localmente
 scripts/dev.mjs     servidor local de prueba con base en memoria
@@ -31,13 +34,14 @@ Los datos se guardan en Upstash Redis: un hash con las personas, uno por jornada
 
 1. **Importar el repo**: en Vercel, *Add New… → Project*, eliges `acreditacion-encuentro-fiscalizadores` y presionas *Deploy*. No hay que configurar nada: no tiene paso de compilación.
 2. **Crear la base**: en el proyecto, pestaña *Storage → Create Database → Upstash for Redis*, plan gratuito, región São Paulo (gru1) o la más cercana. Luego *Connect* al proyecto. Esto agrega solas las variables `KV_REST_API_URL` y `KV_REST_API_TOKEN`.
-3. **Definir los códigos**: en *Settings → Environment Variables* agregas:
-   - `ACCESS_CODE`: el código para quienes acreditan en la puerta.
-   - `ADMIN_CODE`: el código para los organizadores (importar, eliminar, exportar y borrar).
+3. **Definir el código del administrador principal**: en *Settings → Environment Variables* agregas:
+   - `ADMIN_CODE`: tu código de administración.
+   - `ADMIN_NAME`: tu nombre, tal como quieres que aparezca en el registro (por ejemplo `Jethro Santis`).
+   - `ACCESS_CODE` es opcional y heredado: funciona como un código general de puerta que **no** identifica a la persona. Si quieres saber quién acreditó a cada asistente, no lo definas (o bórralo).
 4. **Redesplegar**: en *Deployments*, menú `…` del último despliegue, *Redeploy*, para que tome las variables.
 5. **Dominio propio (opcional)**: en *Settings → Domains* agregas por ejemplo `acreditacion.tudominio.cl`, y en tu DNS creas el registro CNAME que Vercel te indique.
 
-Después abres la URL, entras con el `ADMIN_CODE`, vas a **Importar inscritos** y cargas las planillas que enviaron las instituciones.
+Después abres la URL, entras con el `ADMIN_CODE`, creas a las personas del equipo en **Equipo** (cada una recibe su código) y cargas las planillas en **Importar inscritos**.
 
 > Variables opcionales: `EVENT_KEY` cambia el prefijo de las llaves en Redis, por si quieres reutilizar la misma base para otro evento.
 
@@ -51,5 +55,5 @@ ACCESS_CODE=puerta ADMIN_CODE=admin npm run dev   # para probar los dos roles
 ## Antes del evento
 
 - Haz un ensayo con dos computadores. Después, en *Importar inscritos → Zona de cuidado*, usa **Borrar todas las asistencias**: la lista se mantiene.
-- En cada computador de la puerta ingresa el código de puerta una sola vez (queda guardado) y ponle un nombre al puesto, por ejemplo "Puerta 1".
+- Cada acreditador entra con su código personal en el computador donde trabajará (queda guardado). Si cambian de turno, usar **Salir** y entra la otra persona con su código.
 - Al cierre de cada jornada, descarga el Excel desde **Lista y resumen** como respaldo.

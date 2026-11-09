@@ -32,9 +32,16 @@ header{background:linear-gradient(120deg,var(--navy) 0%,var(--navy-2) 70%,var(--
 .days button{border:0;background:transparent;color:#fff;border-radius:999px;padding:7px 14px;font-weight:600;white-space:nowrap;opacity:.85}
 .days button.on{background:#fff;color:var(--navy);opacity:1}
 .days button .today{font-size:11px;font-weight:700;margin-left:6px;padding:1px 6px;border-radius:999px;background:#ffcf4d;color:#3a2a00}
-.station{display:flex;align-items:center;gap:8px;font-size:14px}
-.station input{width:120px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:6px 9px}
-.station input::placeholder{color:rgba(255,255,255,.6)}
+.me{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;font-size:14px}
+.me b{font-weight:700}
+.me small{font-size:11.5px;opacity:.75;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+body.staff #tabs{display:none}
+body.staff header{padding-bottom:14px}
+body.staff .row .nm{cursor:default;text-decoration:none}
+.by{font-size:12px;color:var(--muted);font-weight:600}
+.codepill{font:700 15px ui-monospace,Menlo,monospace;letter-spacing:.06em;background:#eef2f7;border-radius:7px;padding:3px 8px;white-space:nowrap}
+.newcode{background:var(--ok-bg);border:1px solid #b9e3cb;border-radius:12px;padding:14px 16px;margin-top:12px}
+.newcode .codepill{font-size:24px;background:#fff;padding:6px 12px;display:inline-block;margin:6px 0}
 .sync{display:flex;align-items:center;gap:7px;font-size:13px;opacity:.95;white-space:nowrap}
 .dot{width:9px;height:9px;border-radius:50%;background:#9aa7b8;box-shadow:0 0 0 3px rgba(255,255,255,.12)}
 .logout{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:8px;padding:5px 10px;font-size:13px}
@@ -191,7 +198,7 @@ p.s{color:var(--muted);margin:4px 0 12px;font-size:15px}
       </div>
     </div>
     <div class="days" id="days" role="tablist" aria-label="Jornada"></div>
-    <div class="station"><span>Puesto</span><input id="station" maxlength="24" placeholder="Ej: Puerta 1" aria-label="Nombre del puesto"></div>
+    <div class="me"><small id="meRole">—</small><b id="meName">—</b></div>
     <div class="sync"><span class="dot wait" id="dot"></span><span id="syncTxt">Conectando…</span></div>
     <button class="logout" id="btnLogout" title="Cerrar sesión en este computador">Salir</button>
   </div>
@@ -199,6 +206,7 @@ p.s{color:var(--muted);margin:4px 0 12px;font-size:15px}
     <button data-v="acreditar" class="on">Acreditar</button>
     <button data-v="lista">Lista y resumen</button>
     <button data-v="importar">Importar inscritos</button>
+    <button data-v="equipo">Equipo</button>
   </nav>
 </header>
 
@@ -225,7 +233,7 @@ p.s{color:var(--muted);margin:4px 0 12px;font-size:15px}
     </div>
     <div id="results" class="results"></div>
     <div id="recentWrap">
-      <div class="section-t"><span>Últimos acreditados en este puesto y otros</span><span id="recentCount"></span></div>
+      <div class="section-t"><span>Últimos acreditados</span><span id="recentCount"></span></div>
       <div class="recent" id="recent"></div>
     </div>
   </section>
@@ -316,13 +324,40 @@ p.s{color:var(--muted);margin:4px 0 12px;font-size:15px}
       </div>
     </div>
   </section>
+
+  <!-- EQUIPO -->
+  <section id="v-equipo" class="hidden">
+    <div class="grid2">
+      <div class="card pad">
+        <h2>Agregar integrante del equipo</h2>
+        <p class="s">Cada persona entra con su propio código, y así queda registrado quién acreditó a cada asistente. Los <b>acreditadores</b> solo ven la pantalla de acreditar; los <b>administradores</b> pueden hacer todo.</p>
+        <form id="uForm" autocomplete="off">
+          <div class="f"><label>Nombre *</label><input id="uName" maxlength="60" placeholder="Ej: Gabriela Manzo" required></div>
+          <div class="f row2">
+            <div><label>Rol</label><select id="uRole"><option value="staff">Acreditador/a</option><option value="admin">Administrador/a</option></select></div>
+            <div><label>Código (opcional)</label><input id="uCode" maxlength="24" placeholder="Se genera solo"></div>
+          </div>
+          <button class="btn primary" id="uAdd" type="submit">Agregar y generar código</button>
+        </form>
+        <div id="uNew"></div>
+      </div>
+      <div class="card">
+        <div class="pad" style="padding-bottom:6px"><h2 style="font-size:16px;margin:0">Acreditaciones por persona</h2><p class="s" style="margin:2px 0 0">Cuántos asistentes acreditó cada integrante en cada jornada.</p></div>
+        <div class="tscroll"><table id="byWho"><thead><tr><th>Acreditó</th><th class="cnt">Lun 16</th><th class="cnt">Mar 17</th><th class="cnt">Mié 18</th><th class="cnt">Total</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="pad" style="padding-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="font-size:16px;margin:0">Equipo y códigos</h2><button class="btn sm" id="uCopyAll">Copiar listado de códigos</button></div>
+      <div class="tscroll"><table id="uTbl"><thead><tr><th>Nombre</th><th>Rol</th><th>Código</th><th></th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
 </main>
 
 <div class="login hidden" id="login"><form id="loginForm" autocomplete="off">
   <div class="logo" style="color:var(--navy);border-color:var(--navy);display:inline-block">SER<br>VEL</div>
   <h1>Acreditación · III Encuentro de Organismos Fiscalizadores del Estado</h1>
   <p class="s" style="margin:0">16, 17 y 18 de noviembre de 2026 · Auditorio Caja Los Andes</p>
-  <input id="code" type="password" placeholder="Código de acceso" aria-label="Código de acceso" autocomplete="current-password">
+  <input id="code" type="password" placeholder="Tu código personal" aria-label="Código personal" autocomplete="current-password">
   <div class="err" id="loginErr"></div>
   <button class="btn primary" type="submit" id="loginBtn">Ingresar</button>
 </form></div>
@@ -385,9 +420,8 @@ let day=1, view="acreditar", sel=0, lastResults=[];
 let canWrite=true, isAdmin=false;
 const todayDay=(DAYS.find(d=>d.date===todayISO())||{}).n||null;
 day=todayDay||LS.get("acr_day",1);
-$("#station").value=LS.get("acr_station","");
-$("#station").addEventListener("input",e=>LS.set("acr_station",clean(e.target.value)));
-const station=()=>clean($("#station").value)||"Puerta";
+let MYNAME=LS.get("acr_name",""), MYUID=LS.get("acr_uid","");
+const station=()=>MYNAME||"—";
 
 /* ---------------- Storage layer (API + cola offline) ---------------- */
 let CODE=LS.get("acr_code",""), ROLE=LS.get("acr_role","");
@@ -466,7 +500,7 @@ const Store={
 };
 function errMsg(e){
   if(e&&e.offline)return"Sin conexión a internet. Intenta de nuevo cuando vuelva.";
-  if(e&&e.status===403)return"Esta acción requiere el código de administración.";
+  if(e&&e.status===403)return"Esta acción solo la puede hacer un administrador.";
   return(e&&e.message)||"No se pudo guardar.";
 }
 
@@ -547,7 +581,7 @@ function renderResults(){
   box.innerHTML=lastResults.map((e,i)=>{
     const p=e.p,a=asisOf(p);
     return '<div class="row'+(i===sel?' sel':'')+(a?' done':'')+'" data-i="'+i+'">'+
-      '<div><div class="nm" data-edit="'+esc(e.id)+'" title="Ver / editar datos">'+hl(p.nombre,tk)+'</div>'+
+      '<div><div class="nm" data-edit="'+esc(e.id)+'" title="">'+hl(p.nombre,tk)+'</div>'+
       '<div class="meta"><span><b>'+hl(p.inst||"—",tk)+'</b>'+(e.ii?' · '+esc(e.ii.ab[0]):'')+'</span>'+(p.cargo?'<span>'+hl(p.cargo,tk)+'</span>':'')+(p.rut?'<span>RUT '+esc(p.rut)+'</span>':'')+'</div>'+
       '<div class="tags">'+tagsHTML(p)+'</div></div>'+
       '<div class="act">'+(a?
@@ -567,7 +601,7 @@ function renderRecent(){
 function checkIn(id){
   const p=people.get(id);if(!p||!canWrite)return;
   if(asisOf(p)){toast(p.nombre+" ya estaba acreditado/a ("+hhmm(asisOf(p).t)+")");return}
-  Store.checkin(id,dk(),{t:Date.now(),p:station()});
+  Store.checkin(id,dk(),{t:Date.now(),p:station(),u:MYUID});
   $("#q").value="";sel=0;renderResults();$("#q").focus();
   toast("✓ "+p.nombre+" acreditado/a",{kind:"ok",undo:()=>undoCheckIn(id,true)});
 }
@@ -578,7 +612,7 @@ function undoCheckIn(id,silent){
 document.addEventListener("click",e=>{
   const g=e.target.closest("[data-go]");if(g){checkIn(g.dataset.go);return}
   const u=e.target.closest("[data-undo]");if(u){undoCheckIn(u.dataset.undo);return}
-  const ed=e.target.closest("[data-edit]");if(ed){openPerson(ed.dataset.edit);return}
+  const ed=e.target.closest("[data-edit]");if(ed){if(isAdmin)openPerson(ed.dataset.edit);return}
   const r=e.target.closest(".row[data-i]");if(r&&!e.target.closest("button")){sel=+r.dataset.i;renderResults()}
 });
 $("#q").addEventListener("input",()=>{sel=0;renderResults()});
@@ -646,12 +680,12 @@ function openPerson(id,prefill){
       if(id){
         data.dias=[...f.querySelectorAll('input[name=dia]:checked')].map(x=>+x.value);
         await Store.update(id,data);closeModal();
-        if(andCheck)Store.checkin(id,dk(),{t:Date.now(),p:station()});
+        if(andCheck)Store.checkin(id,dk(),{t:Date.now(),p:station(),u:MYUID});
         if(andCheck){$("#q").value="";renderResults();toast("✓ "+nombre+" acreditado/a",{kind:"ok",undo:()=>undoCheckIn(id,true)})}else toast("Datos guardados");
       }else{
         const now=f.now&&f.now.checked;
         const doc={...data,dias:[],origen:"puerta",creado:Date.now(),creadoPor:station()};
-        const nid=Store.create(doc,now?{[dk()]:{t:Date.now(),p:station()}}:null);closeModal();$("#q").value="";renderResults();
+        const nid=Store.create(doc,now?{[dk()]:{t:Date.now(),p:station(),u:MYUID}}:null);closeModal();$("#q").value="";renderResults();
         toast(now?"✓ "+nombre+" agregado/a y acreditado/a":nombre+" agregado/a a la lista",{kind:"ok",undo:now?()=>undoCheckIn(nid,true):null});
       }
     }catch(e){btns.forEach(b=>b.disabled=false);toast(errMsg(e),{kind:"bad"})}
@@ -688,7 +722,7 @@ function renderDays(){
 $("#days").addEventListener("click",e=>{const b=e.target.closest("[data-d]");if(!b)return;day=+b.dataset.d;LS.set("acr_day",day);renderAll();if(view==="acreditar")$("#q").focus()});
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(!b)return;view=b.dataset.v;
   document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
-  ["acreditar","lista","importar"].forEach(v=>$("#v-"+v).classList.toggle("hidden",v!==view));
+  ["acreditar","lista","importar","equipo"].forEach(v=>$("#v-"+v).classList.toggle("hidden",v!==view));
   renderAll();if(view==="acreditar")$("#q").focus()});
 
 function renderBanners(){
@@ -718,7 +752,7 @@ function listRows(){
 }
 function renderLista(){
   const rows=listRows(),tk=tokens($("#lq").value);
-  const cell=(p,d)=>{const a=asisOf(p,d.n);return a?'<span class="chk" title="'+esc(a.p||"")+'">✓ '+hhmm(a.t)+'</span>':((p.dias||[]).includes(d.n)?'<span class="ins" title="Inscrito">○</span>':'')};
+  const cell=(p,d)=>{const a=asisOf(p,d.n);return a?'<span class="chk">✓ '+hhmm(a.t)+'</span>'+(a.p?'<div class="by">'+esc(a.p)+'</div>':''):((p.dias||[]).includes(d.n)?'<span class="ins" title="Inscrito">○</span>':'')};
   $("#tbl tbody").innerHTML=rows.slice(0,600).map(e=>{const p=e.p;return'<tr><td><span class="nm" data-edit="'+esc(e.id)+'" style="cursor:pointer;font-weight:600">'+hl(p.nombre,tk)+'</span>'+(/expos/i.test(p.tipo||"")?' <span class="tag exp">Exp.</span>':'')+(p.origen==="puerta"?' <span class="tag walk">Puerta</span>':'')+(p.cargo?'<div class="s" style="color:var(--muted);font-size:13.5px">'+esc(p.cargo)+'</div>':'')+'</td><td>'+hl(p.inst,tk)+'</td><td style="white-space:nowrap">'+esc(p.rut)+'</td>'+DAYS.map(d=>'<td class="c">'+cell(p,d)+'</td>').join("")+'</tr>'}).join("")||'<tr><td colspan="6" style="color:var(--muted);padding:18px">Sin resultados.</td></tr>';
   $("#tblInfo").textContent=rows.length+" personas"+(rows.length>600?" (se muestran 600; usa el filtro)":"")+" · ○ inscrito · ✓ hora de llegada";
   // resumen
@@ -732,8 +766,8 @@ function renderLista(){
 
 /* ---------------- Export ---------------- */
 function exportRows(){
-  const H=["Nombre","RUT","Institución","Sigla","Cargo","Tipo","Correo","Teléfono","Origen","Inscrito Lun 16","Inscrito Mar 17","Inscrito Mié 18","Llegada Lun 16","Llegada Mar 17","Llegada Mié 18","Puesto Lun 16","Puesto Mar 17","Puesto Mié 18"];
-  const rows=[...people.values()].sort((a,b)=>(a.inst||"").localeCompare(b.inst||"","es")||a.nombre.localeCompare(b.nombre,"es")).map(p=>{const ii=instInfo(p.inst);return[p.nombre,p.rut,p.inst,ii?ii.ab[0]:"",p.cargo,p.tipo,p.correo,p.tel,p.origen==="puerta"?"Agregado en puerta":"Lista de inscritos",
+  const H=["Nombre","RUT","Institución","Sigla","Cargo","Tipo","Correo","Teléfono","Origen","Registrado por","Inscrito Lun 16","Inscrito Mar 17","Inscrito Mié 18","Llegada Lun 16","Llegada Mar 17","Llegada Mié 18","Acreditó Lun 16","Acreditó Mar 17","Acreditó Mié 18"];
+  const rows=[...people.values()].sort((a,b)=>(a.inst||"").localeCompare(b.inst||"","es")||a.nombre.localeCompare(b.nombre,"es")).map(p=>{const ii=instInfo(p.inst);return[p.nombre,p.rut,p.inst,ii?ii.ab[0]:"",p.cargo,p.tipo,p.correo,p.tel,p.origen==="puerta"?"Agregado en puerta":"Lista de inscritos",p.origen==="puerta"?(p.creadoPor||""):"",
     ...DAYS.map(d=>(p.dias||[]).includes(d.n)?"Sí":""),...DAYS.map(d=>{const a=asisOf(p,d.n);return a?hhmm(a.t):""}),...DAYS.map(d=>{const a=asisOf(p,d.n);return a?a.p||"":""})]});
   return[H,...rows];
 }
@@ -747,7 +781,7 @@ function saveFile(blob,name){const a=document.createElement("a");a.href=URL.crea
 const stamp=()=>{const d=new Date();return d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+"_"+pad2(d.getHours())+pad2(d.getMinutes())};
 $("#btnExport").onclick=async()=>{
   try{const X=await loadXLSX();const wb=X.utils.book_new();
-    const ws=X.utils.aoa_to_sheet(exportRows());ws["!cols"]=[{wch:32},{wch:13},{wch:40},{wch:10},{wch:24},{wch:12},{wch:26},{wch:13},{wch:18},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:12},{wch:12},{wch:12}];
+    const ws=X.utils.aoa_to_sheet(exportRows());ws["!cols"]=[{wch:32},{wch:13},{wch:40},{wch:10},{wch:24},{wch:12},{wch:26},{wch:13},{wch:18},{wch:22},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:22},{wch:22},{wch:22}];
     X.utils.book_append_sheet(wb,ws,"Asistentes");
     const ws2=X.utils.aoa_to_sheet(summaryRows());ws2["!cols"]=[{wch:44},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12}];X.utils.book_append_sheet(wb,ws2,"Resumen por institución");
     const buf=X.write(wb,{bookType:"xlsx",type:"array"});
@@ -763,7 +797,7 @@ $("#btnCopy").onclick=async()=>{
 const FIELDS=[["","— ignorar —"],["nombre","Nombre(s)"],["apellido","Apellido(s)"],["full","Nombre completo"],["rut","RUT"],["inst","Institución"],["cargo","Cargo"],["tipo","Tipo / rol"],["correo","Correo"],["tel","Teléfono"],["dias","Jornadas (texto)"],["d1","Marca Lun 16"],["d2","Marca Mar 17"],["d3","Marca Mié 18"]];
 let imp=null; // {header:[], rows:[[]], map:[]}
 function guessField(h){const s=norm(h).trim();
-  if(/llegada|asistio|hora|puesto (lun|mar|mie)|sigla|origen/.test(s))return"";
+  if(/llegada|asistio|hora|puesto (lun|mar|mie)|acredit|registrado|sigla|origen/.test(s))return"";
   if(/nombre.*complet|nombre y apellido|apellidos? y nombre/.test(s))return"full";
   if(/apellido/.test(s))return"apellido"; if(/^nombres?\b|^nombre/.test(s))return"nombre";
   if(/\brut\b|\brun\b|cedula/.test(s))return"rut"; if(/instituc|servicio|organismo|entidad|reparticion/.test(s))return"inst";
@@ -884,10 +918,51 @@ $("#btnResetAsis").onclick=()=>confirmBox("¿Borrar todas las asistencias?","Las
 $("#btnWipe").onclick=()=>confirmBox("¿Borrar toda la base?","Se eliminan todas las personas y asistencias para todos los puestos. No se puede deshacer.","Borrar todo",async()=>{
   try{await direct({op:"wipe"});toast("Se borró toda la base")}catch(e){toast(errMsg(e),{kind:"bad"})}},"BORRAR");
 
+/* ---------------- Equipo ---------------- */
+let users=null,usersLoading=false;
+async function loadUsers(){
+  if(usersLoading)return;usersLoading=true;
+  try{users=await api("/api/users");}catch(e){if(e.status===401)logout(e.message);else toast(errMsg(e),{kind:"bad"})}
+  finally{usersLoading=false;if(view==="equipo")renderEquipo(true)}
+}
+function renderEquipo(fromLoad){
+  if(!users&&!fromLoad){loadUsers()}
+  // acreditaciones por persona
+  const m=new Map();
+  for(const p of people.values())DAYS.forEach((d,i)=>{const a=asisOf(p,d.n);if(!a)return;const k=a.u||("n:"+a.p);if(!m.has(k))m.set(k,{name:a.p||"(sin nombre)",c:[0,0,0]});m.get(k).c[i]++});
+  const rows=[...m.values()].sort((a,b)=>b.c.reduce((x,y)=>x+y)-a.c.reduce((x,y)=>x+y));
+  $("#byWho tbody").innerHTML=rows.map(r=>'<tr><td>'+esc(r.name)+'</td>'+r.c.map(n=>'<td class="cnt">'+(n||'<span style="color:#b6c1d1">0</span>')+'</td>').join("")+'<td class="cnt"><b>'+r.c.reduce((x,y)=>x+y)+'</b></td></tr>').join("")||'<tr><td colspan="5" style="color:var(--muted)">Aún no hay acreditaciones.</td></tr>';
+  if(!users){$("#uTbl tbody").innerHTML='<tr><td colspan="4" style="color:var(--muted)">Cargando…</td></tr>';return}
+  const roleTxt=r=>r==="admin"?'<span class="tag aut">Administrador/a</span>':'<span class="tag hoy">Acreditador/a</span>';
+  $("#uTbl tbody").innerHTML=users.builtin.map(u=>'<tr><td><b>'+esc(u.name)+'</b></td><td>'+roleTxt(u.role)+'</td><td><span class="s" style="color:var(--muted)">Definido en Vercel ('+esc(u.env)+')</span></td><td></td></tr>').join("")+
+    users.users.map(u=>'<tr><td><b>'+esc(u.name)+'</b>'+(u.uid===MYUID?' <span class="tag">tú</span>':'')+'</td><td>'+roleTxt(u.role)+'</td><td><span class="codepill">'+esc(u.code)+'</span> <button class="link" data-ucopy="'+esc(u.code)+'">Copiar</button></td><td style="text-align:right"><button class="btn danger sm" data-udel="'+esc(u.id)+'" data-uname="'+esc(u.name)+'">Desactivar</button></td></tr>').join("")||'';
+  if(!users.users.length)$("#uTbl tbody").insertAdjacentHTML("beforeend",'<tr><td colspan="4" style="color:var(--muted)">Todavía no hay integrantes. Agrega a quienes acreditarán en la puerta.</td></tr>');
+}
+$("#uForm").addEventListener("submit",async e=>{
+  e.preventDefault();const name=clean($("#uName").value);if(!name){$("#uName").focus();return}
+  const btn=$("#uAdd");btn.disabled=true;
+  try{const r=await api("/api/op",{op:"userAdd",name,role:$("#uRole").value,code:clean($("#uCode").value)});
+    const u=r.user;$("#uNew").innerHTML='<div class="newcode">Código de <b>'+esc(u.name)+'</b> ('+(u.role==="admin"?"administrador/a":"acreditador/a")+'):<br><span class="codepill">'+esc(u.code)+'</span><br><span class="s" style="color:var(--muted)">Entrégaselo a la persona; con él entra a la app desde cualquier computador.</span></div>';
+    $("#uName").value="";$("#uCode").value="";$("#uRole").value="staff";$("#uName").focus();await loadUsers();
+  }catch(err){toast(errMsg(err),{kind:"bad"})}finally{btn.disabled=false}
+});
+document.addEventListener("click",async e=>{
+  const c=e.target.closest("[data-ucopy]");if(c){try{await navigator.clipboard.writeText(c.dataset.ucopy);toast("Código copiado",{kind:"ok"})}catch(x){toast("No se pudo copiar",{kind:"bad"})}return}
+  const d=e.target.closest("[data-udel]");if(d){const id=d.dataset.udel,nm=d.dataset.uname;
+    confirmBox("¿Desactivar el código de "+nm+"?","Ya no podrá entrar a la app. Las acreditaciones que hizo se mantienen con su nombre.","Desactivar",async()=>{
+      try{await api("/api/op",{op:"userDel",uid:id});toast("Código desactivado");await loadUsers()}catch(err){toast(errMsg(err),{kind:"bad"})}})}
+});
+$("#uCopyAll").onclick=async()=>{
+  if(!users)return;const t=users.users.map(u=>u.name+"\t"+(u.role==="admin"?"Administrador/a":"Acreditador/a")+"\t"+u.code).join("\n");
+  try{await navigator.clipboard.writeText("Nombre\tRol\tCódigo\n"+t);toast("Listado copiado: pégalo en Excel o en un correo",{kind:"ok"})}catch(x){toast("No se pudo copiar",{kind:"bad"})}
+};
+
 /* ---------------- Render all ---------------- */
 let rt=null;
 function onData(){buildIndex();clearTimeout(rt);rt=setTimeout(renderAll,30)}
 function renderAll(){
+  if(!isAdmin&&view!=="acreditar"){view="acreditar";["lista","importar","equipo"].forEach(v=>$("#v-"+v).classList.add("hidden"));$("#v-acreditar").classList.remove("hidden");document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x.dataset.v==="acreditar"))}
+  if(view==="equipo")renderEquipo();
   renderDays();renderBanners();renderStats();instOptions();
   if(view==="acreditar")renderResults();
   if(view==="lista")renderLista();
@@ -898,7 +973,7 @@ renderAll();$("#q").focus();
 
 /* ---------------- Inicio: acceso y sincronización ---------------- */
 function logout(msg){
-  CODE="";ROLE="";LS.set("acr_code","");LS.set("acr_role","");
+  CODE="";ROLE="";MYNAME="";MYUID="";["acr_code","acr_role","acr_name","acr_uid"].forEach(k=>LS.set(k,""));users=null;
   $("#login").classList.remove("hidden");$("#loginErr").textContent=msg||"";$("#code").value="";$("#code").focus();
 }
 $("#btnLogout").onclick=()=>{
@@ -910,13 +985,20 @@ $("#loginForm").addEventListener("submit",async e=>{
   $("#loginBtn").disabled=true;$("#loginErr").textContent="";
   try{const r=await fetch("/api/auth",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:c})});const j=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(j.error||"No se pudo validar el código.");
-    CODE=c;ROLE=j.role;LS.set("acr_code",CODE);LS.set("acr_role",ROLE);start();
+    CODE=c;ROLE=j.role;MYNAME=j.name||"";MYUID=j.uid||"";LS.set("acr_code",CODE);LS.set("acr_role",ROLE);LS.set("acr_name",MYNAME);LS.set("acr_uid",MYUID);start();
   }catch(err){$("#loginErr").textContent=err.message==="Failed to fetch"?"Sin conexión a internet.":err.message}
   finally{$("#loginBtn").disabled=false}
 });
 let started=false;
 function start(){
-  isAdmin=ROLE==="admin";$("#login").classList.add("hidden");renderAll();$("#q").focus();
+  isAdmin=ROLE==="admin";document.body.classList.toggle("staff",!isAdmin);
+  $("#meName").textContent=MYNAME||"—";$("#meRole").textContent=isAdmin?"Administrador/a":"Acreditador/a";
+  $("#login").classList.add("hidden");renderAll();$("#q").focus();
+  // refresca nombre y rol por si el administrador los cambió
+  fetch("/api/auth",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:CODE})}).then(r=>r.json().then(j=>({r,j}))).then(({r,j})=>{
+    if(r.status===401){logout(j.error);return}
+    if(r.ok&&(j.role!==ROLE||j.name!==MYNAME)){ROLE=j.role;MYNAME=j.name;MYUID=j.uid;LS.set("acr_role",ROLE);LS.set("acr_name",MYNAME);LS.set("acr_uid",MYUID);start()}
+  }).catch(()=>{});
   if(started){poll(true);flush();return}
   started=true;rebuild();poll(true);if(outbox.length)flush();
   setInterval(()=>{if(outbox.length&&!flushing)flush();else poll(false)},2500);

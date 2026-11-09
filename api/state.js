@@ -2,7 +2,7 @@
 import { K, DAYS, pipe, one, hashToObj, requireRole, send, wrap } from "./_lib.js";
 
 export default wrap(async (req, res) => {
-  requireRole(req, "staff");
+  await requireRole(req, "staff");
   const known = Number(req.query?.v ?? -1);
   const v = Number((await one(["GET", K.ver])) || 0);
   if (known === v) return send(res, 200, { v, same: true });

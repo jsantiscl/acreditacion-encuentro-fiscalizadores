@@ -10,6 +10,7 @@ const routes = {
   "/api/state": (await import("../api/state.js")).default,
   "/api/op": (await import("../api/op.js")).default,
   "/api/auth": (await import("../api/auth.js")).default,
+  "/api/users": (await import("../api/users.js")).default,
 };
 
 http.createServer(async (req, res) => {

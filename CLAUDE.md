@@ -8,9 +8,12 @@ App de acreditación del III Encuentro de Organismos Fiscalizadores del Estado (
 - Redis: `acr:people` (hash id → persona JSON), `acr:asis:d1|d2|d3` (hash id → {t, p}), `acr:ver` (contador). Prefijo configurable con `EVENT_KEY`.
 - Acreditar usa `HSETNX` → dos puestos que acreditan a la misma persona cuentan una vez.
 - Cola offline (`outbox` en localStorage) solo para checkin / undo / create; editar, eliminar, importar y borrar requieren conexión.
-- Roles: `ACCESS_CODE` = staff (puerta), `ADMIN_CODE` = admin (import, delete, resetAsis, wipe). Sin variables y fuera de Vercel, `npm run dev` usa base en memoria y cualquier código es admin.
+- Identidad: `whoAmI(code)` → {role, name, uid}. `ADMIN_CODE`/`ADMIN_NAME` (env) = admin principal; códigos personales en `acr:users` (hash sha256(prefijo:código normalizado) → {name, role, code}), gestionados desde la pestaña Equipo (`userAdd`/`userDel`, `GET /api/users`). `ACCESS_CODE` = código general heredado sin identidad.
+- Quién acredita lo fija el servidor (`cleanRec` usa `who.name`/`who.uid`); el cliente solo aporta la hora.
+- Permisos: staff solo `checkin`, `undo`, `create` (forzado a origen "puerta") y lectura de `/api/state`; todo lo demás es admin. En la interfaz, staff solo ve la vista Acreditar (`body.staff`).
+- Sin variables y fuera de Vercel, `npm run dev` usa base en memoria y cualquier código es admin.
 
 ## Convenciones
 - Interfaz y mensajes en español de Chile. Fechas/horas en hora local del navegador.
 - Todo texto que venga de datos se escapa con `esc()` antes de insertarlo como HTML.
-- Probar con `ACCESS_CODE=puerta ADMIN_CODE=admin npm run dev` y dos ventanas (dos puestos) antes de subir cambios.
+- Probar con `ADMIN_CODE=admin ADMIN_NAME="Nombre" npm run dev` y dos ventanas (admin + un acreditador creado en Equipo) antes de subir cambios.

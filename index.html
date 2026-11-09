@@ -166,6 +166,8 @@ p.s{color:var(--muted);margin:4px 0 12px;font-size:15px}
 .f label{display:block;font-size:14px;font-weight:600;margin-bottom:4px}
 .f input,.f select{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:17px;background:#fff}
 .f input:focus,.f select:focus{outline:2px solid #bcd3fb;border-color:var(--accent)}
+.f input[type=checkbox]{width:auto;flex:0 0 auto;margin:2px 0 0;accent-color:var(--ok);transform:scale(1.25)}
+.f.daychk label,.f .daychk label{display:flex;align-items:flex-start;gap:9px;font-weight:500}
 .f .err{color:var(--bad);font-size:13.5px;margin-top:3px}
 .f.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .daychk{display:flex;gap:14px;flex-wrap:wrap}
@@ -181,9 +183,123 @@ p.s{color:var(--muted);margin:4px 0 12px;font-size:15px}
 .toast button{background:rgba(255,255,255,.16);border:0;color:#fff;border-radius:8px;padding:5px 10px;font-weight:700}
 @keyframes up{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
 
+/* ---------- Responsivo ---------- */
+.t-short,.clr .sm{display:none}
+.acct{display:flex;align-items:center;gap:14px}
+nav{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+nav::-webkit-scrollbar{display:none}
+nav button{white-space:nowrap;flex:0 0 auto}
+#q::-webkit-search-cancel-button{display:none}
+html{-webkit-text-size-adjust:100%}
+button,.btn,.link,.days button,nav button{touch-action:manipulation}
+@media (hover:none){.kbhint{display:none}}
+
+/* Tablet y notebooks chicos: el encabezado pasa a dos filas */
+@media (max-width:1100px){
+  .hrow{display:grid;grid-template-columns:1fr auto;grid-template-areas:"brand acct" "days days";row-gap:12px}
+  .brand{grid-area:brand}.acct{grid-area:acct}.days{grid-area:days;justify-self:start}
+}
 @media (max-width:860px){
-  .stats{grid-template-columns:repeat(2,1fr)} .two,.grid2{grid-template-columns:1fr}
-  .row{grid-template-columns:1fr} .act{align-items:stretch} #q{font-size:20px}
+  .two,.grid2{grid-template-columns:1fr}
+  .row{grid-template-columns:1fr} .act{align-items:stretch;min-width:0} #q{font-size:20px}
+  .act .btn.go{padding:14px 22px}
+  .okbadge{justify-content:center}
+  .act .link{align-self:center;padding:6px 10px}
+}
+
+/* Celular */
+@media (max-width:640px){
+  header{padding:10px 12px 0}
+  body.staff header{padding-bottom:12px}
+  .hrow{row-gap:10px;column-gap:10px}
+  .brand{gap:10px}
+  .logo{font-size:9.5px;padding:5px 5px}
+  .titles .k{font-size:9.5px;letter-spacing:.1em}
+  .titles h1{font-size:15px;line-height:1.2}
+  .t-long{display:none}.t-short{display:inline}
+  .acct{gap:10px}
+  .me small{font-size:9.5px}.me b{font-size:13px;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #syncTxt{display:none}
+  .logout{padding:7px 10px}
+  .days{justify-self:stretch;width:100%}
+  .days button{flex:1;padding:9px 6px;font-size:15px}
+  .days button .today{margin-left:4px;font-size:10px;padding:1px 5px}
+  nav{margin:10px -12px 0;padding:0 12px;gap:2px}
+  nav button{padding:10px 13px 11px;font-size:15px}
+  .lg{display:none}
+
+  main{padding:12px 12px 90px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .titles .k{display:none}
+  .kbhint{display:none}
+  #byWho th,#byWho td,#sum th,#sum td{padding:8px 9px}
+  .banner{font-size:14px;padding:10px 12px}
+  .stats{gap:8px;margin-bottom:12px}
+  .stat{padding:9px 12px}
+  .stat .l{font-size:12px;line-height:1.2}
+  .stat .v{font-size:22px;margin-top:2px}
+  .stat .v small{font-size:13px}
+
+  #q{font-size:18px;padding:14px 48px 14px 46px;border-radius:12px}
+  .searchwrap svg{left:14px;width:21px;height:21px}
+  .searchwrap .clr{right:8px;padding:6px 10px;font-size:16px}
+  .clr .lg{display:none}.clr .sm{display:inline}
+  .hint{font-size:13.5px;margin-bottom:10px}
+  .hint .btn{width:100%;padding:12px;font-size:16px}
+
+  .row{padding:12px 13px;gap:10px;border-radius:12px}
+  .row .nm{font-size:18px}
+  .row .meta{font-size:14px;gap:2px 10px}
+  .act .btn.go{font-size:18px;padding:13px}
+  .section-t{margin:16px 2px 8px;font-size:12px}
+  .recent .ri{flex-wrap:wrap;padding:10px 13px;gap:4px 12px}
+  .recent .ri>div:last-child{margin-left:auto}
+  .empty{padding:20px 14px}
+  .empty h3{font-size:17px}
+  .empty .btn{width:100%}
+
+  .toolbar{gap:8px}
+  .toolbar input{min-width:100%;font-size:16px}
+  .toolbar select{flex:1 1 45%;min-width:0;font-size:16px}
+  .toolbar .btn{flex:1 1 45%}
+  .pad{padding:14px}
+  h2{font-size:17px}
+  .f.row2{grid-template-columns:1fr}
+  .f input,.f select,textarea,.mapgrid select{font-size:16px}
+  .drop{padding:18px 12px}
+
+  /* Tablas como tarjetas */
+  table.rt thead{display:none}
+  table.rt,table.rt tbody{display:block}
+  table.rt tr{display:grid;border-bottom:1px solid #e6ebf2;padding:10px 14px;gap:2px 10px}
+  table.rt tr:last-child{border-bottom:0}
+  table.rt td{display:block;padding:0;border:0}
+  #tbl tr{grid-template-columns:repeat(3,1fr)}
+  #tbl td.c-name,#tbl td.c-inst,#tbl td.c-rut{grid-column:1/-1}
+  #tbl td.c-inst{color:var(--muted);font-size:14px}
+  #tbl td.c-rut{color:var(--muted);font-size:13.5px}
+  #tbl td.c-rut.norut{display:none}
+  #tbl td.c-day{text-align:left;margin-top:6px;background:#f5f8fc;border-radius:8px;padding:5px 8px;font-size:14px}
+  #tbl td.c-day::before{content:attr(data-label);display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  #uTbl tr{grid-template-columns:1fr auto;align-items:center}
+  #uTbl td.u-name{grid-column:1/-1}
+  #uTbl td.u-act{grid-row:2/4;grid-column:2}
+  .tscroll{max-height:none}
+
+  /* Formularios en hoja completa */
+  .ov{padding:0;align-items:flex-end}
+  .modal{width:100%;border-radius:18px 18px 0 0;max-height:94dvh;overflow:auto}
+  .modal .hd{padding:16px 16px 4px;position:sticky;top:0;background:#fff;z-index:1}
+  .modal .bd{padding:6px 16px}
+  .modal .ft{padding:12px 16px calc(16px + env(safe-area-inset-bottom));position:sticky;bottom:0;background:#fff;border-top:1px solid #eef2f7}
+  .modal .ft>div:last-child{flex:1;flex-wrap:wrap}
+  .modal .ft>div:last-child .btn{flex:1;padding:12px}
+  .modal .ft>div:first-child:empty{display:none}
+
+  #toasts{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));transform:none}
+  .toast{width:100%;justify-content:space-between;font-size:15px}
+  .login form{padding:24px 20px 20px}
+  .login h1{font-size:18px}
 }
 </style>
 </head>
@@ -194,18 +310,20 @@ p.s{color:var(--muted);margin:4px 0 12px;font-size:15px}
       <div class="logo">SER<br>VEL</div>
       <div class="titles">
         <div class="k">Acreditación · 16–18 nov 2026</div>
-        <h1>III Encuentro de Organismos Fiscalizadores del Estado</h1>
+        <h1><span class="t-long">III Encuentro de Organismos Fiscalizadores del Estado</span><span class="t-short">III Encuentro Fiscalizadores</span></h1>
       </div>
     </div>
     <div class="days" id="days" role="tablist" aria-label="Jornada"></div>
-    <div class="me"><small id="meRole">—</small><b id="meName">—</b></div>
-    <div class="sync"><span class="dot wait" id="dot"></span><span id="syncTxt">Conectando…</span></div>
-    <button class="logout" id="btnLogout" title="Cerrar sesión en este computador">Salir</button>
+    <div class="acct">
+      <div class="me"><small id="meRole">—</small><b id="meName">—</b></div>
+      <div class="sync" title=""><span class="dot wait" id="dot"></span><span id="syncTxt">Conectando…</span></div>
+      <button class="logout" id="btnLogout" title="Cerrar sesión en este equipo">Salir</button>
+    </div>
   </div>
   <nav id="tabs">
     <button data-v="acreditar" class="on">Acreditar</button>
-    <button data-v="lista">Lista y resumen</button>
-    <button data-v="importar">Importar inscritos</button>
+    <button data-v="lista">Lista<span class="lg"> y resumen</span></button>
+    <button data-v="importar">Importar<span class="lg"> inscritos</span></button>
     <button data-v="equipo">Equipo</button>
   </nav>
 </header>
@@ -224,11 +342,11 @@ p.s{color:var(--muted);margin:4px 0 12px;font-size:15px}
 
     <div class="searchwrap">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" autocomplete="off" spellcheck="false" placeholder="Buscar por nombre, apellido, institución, sigla o RUT…" aria-label="Buscar asistente">
-      <button class="clr hidden" id="qclr">Limpiar <kbd>Esc</kbd></button>
+      <input id="q" type="search" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Buscar por nombre, apellido, institución, sigla o RUT…" aria-label="Buscar asistente">
+      <button class="clr hidden" id="qclr" aria-label="Limpiar búsqueda"><span class="lg">Limpiar <kbd>Esc</kbd></span><span class="sm">✕</span></button>
     </div>
     <div class="hint">
-      <span>Escribe cualquier parte del nombre o la institución (ej. <i>gonz sii</i>). <kbd>↑</kbd><kbd>↓</kbd> para elegir, <kbd>Enter</kbd> para acreditar.</span>
+      <span>Escribe cualquier parte del nombre o la institución (ej. <i>gonz sii</i>).<span class="kbhint"> <kbd>↑</kbd><kbd>↓</kbd> para elegir, <kbd>Enter</kbd> para acreditar.</span></span>
       <button class="btn" id="btnAdd">+ Agregar persona no inscrita</button>
     </div>
     <div id="results" class="results"></div>
@@ -254,7 +372,7 @@ p.s{color:var(--muted);margin:4px 0 12px;font-size:15px}
       <button class="btn" id="btnCopy">Copiar tabla</button>
     </div>
     <div class="two">
-      <div class="card"><div class="tscroll"><table id="tbl"><thead><tr>
+      <div class="card"><div class="tscroll"><table id="tbl" class="rt"><thead><tr>
         <th>Nombre</th><th>Institución</th><th>RUT</th><th class="c">Lun 16</th><th class="c">Mar 17</th><th class="c">Mié 18</th>
       </tr></thead><tbody></tbody></table></div><div class="more" id="tblInfo"></div></div>
       <div class="card"><div class="pad" style="padding-bottom:6px"><h2 style="font-size:16px;margin:0">Resumen por institución</h2><p class="s" id="sumDay" style="margin:2px 0 0"></p></div>
@@ -348,7 +466,7 @@ p.s{color:var(--muted);margin:4px 0 12px;font-size:15px}
     </div>
     <div class="card" style="margin-top:16px">
       <div class="pad" style="padding-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="font-size:16px;margin:0">Equipo y códigos</h2><button class="btn sm" id="uCopyAll">Copiar listado de códigos</button></div>
-      <div class="tscroll"><table id="uTbl"><thead><tr><th>Nombre</th><th>Rol</th><th>Código</th><th></th></tr></thead><tbody></tbody></table></div>
+      <div class="tscroll"><table id="uTbl" class="rt"><thead><tr><th>Nombre</th><th>Rol</th><th>Código</th><th></th></tr></thead><tbody></tbody></table></div>
     </div>
   </section>
 </main>
@@ -432,6 +550,9 @@ day=autoDay;
 setInterval(()=>{const nd=defaultDay();if(nd!==autoDay){autoDay=nd;day=nd;renderAll();toast("Se cambió a la jornada del "+DAYS[nd-1].long)}},60000);
 let MYNAME=LS.get("acr_name",""), MYUID=LS.get("acr_uid","");
 const station=()=>MYNAME||"—";
+const mqSmall=window.matchMedia("(max-width: 640px)");
+function setPh(){$("#q").placeholder=mqSmall.matches?"Nombre, institución, sigla o RUT":"Buscar por nombre, apellido, institución, sigla o RUT…"}
+setPh();(mqSmall.addEventListener?mqSmall.addEventListener("change",setPh):mqSmall.addListener(setPh));
 
 /* ---------------- Storage layer (API + cola offline) ---------------- */
 let CODE=LS.get("acr_code",""), ROLE=LS.get("acr_role","");
@@ -743,7 +864,7 @@ function renderBanners(){
   $("#banners").innerHTML=b.join("");
   const gt=$("#goToday");if(gt)gt.onclick=()=>{day=todayDay;renderAll()};
 }
-function setSync(kind,txt){$("#dot").className="dot "+kind;$("#syncTxt").textContent=txt}
+function setSync(kind,txt){$("#dot").className="dot "+kind;$("#syncTxt").textContent=txt;$(".sync").title=txt}
 
 /* ---------------- Lista view ---------------- */
 function instOptions(){
@@ -763,7 +884,7 @@ function listRows(){
 function renderLista(){
   const rows=listRows(),tk=tokens($("#lq").value);
   const cell=(p,d)=>{const a=asisOf(p,d.n);return a?'<span class="chk">✓ '+hhmm(a.t)+'</span>'+(a.p?'<div class="by">'+esc(a.p)+'</div>':''):((p.dias||[]).includes(d.n)?'<span class="ins" title="Inscrito">○</span>':'')};
-  $("#tbl tbody").innerHTML=rows.slice(0,600).map(e=>{const p=e.p;return'<tr><td><span class="nm" data-edit="'+esc(e.id)+'" style="cursor:pointer;font-weight:600">'+hl(p.nombre,tk)+'</span>'+(/expos/i.test(p.tipo||"")?' <span class="tag exp">Exp.</span>':'')+(p.origen==="puerta"?' <span class="tag walk">Puerta</span>':'')+(p.cargo?'<div class="s" style="color:var(--muted);font-size:13.5px">'+esc(p.cargo)+'</div>':'')+'</td><td>'+hl(p.inst,tk)+'</td><td style="white-space:nowrap">'+esc(p.rut)+'</td>'+DAYS.map(d=>'<td class="c">'+cell(p,d)+'</td>').join("")+'</tr>'}).join("")||'<tr><td colspan="6" style="color:var(--muted);padding:18px">Sin resultados.</td></tr>';
+  $("#tbl tbody").innerHTML=rows.slice(0,600).map(e=>{const p=e.p;return'<tr><td class="c-name"><span class="nm" data-edit=""'+esc(e.id)+'" style="cursor:pointer;font-weight:600">'+hl(p.nombre,tk)+'</span>'+(/expos/i.test(p.tipo||"")?' <span class="tag exp">Exp.</span>':'')+(p.origen==="puerta"?' <span class="tag walk">Puerta</span>':'')+(p.cargo?'<div class="s" style="color:var(--muted);font-size:13.5px">'+esc(p.cargo)+'</div>':'')+'</td><td class="c-inst">'+hl(p.inst,tk)+'</td><td class="c-rut'+(p.rut?'':' norut')+'" style="white-space:nowrap">'+esc(p.rut)+'</td>'+DAYS.map(d=>'<td class="c c-day" data-label="'+d.short+'">'+(cell(p,d)||'<span class="ins">—</span>')+'</td>').join("")+'</tr>'}).join("")||'<tr><td colspan="6" style="color:var(--muted);padding:18px">Sin resultados.</td></tr>';
   $("#tblInfo").textContent=rows.length+" personas"+(rows.length>600?" (se muestran 600; usa el filtro)":"")+" · ○ inscrito · ✓ hora de llegada";
   // resumen
   const m=new Map();
@@ -944,8 +1065,8 @@ function renderEquipo(fromLoad){
   $("#byWho tbody").innerHTML=rows.map(r=>'<tr><td>'+esc(r.name)+'</td>'+r.c.map(n=>'<td class="cnt">'+(n||'<span style="color:#b6c1d1">0</span>')+'</td>').join("")+'<td class="cnt"><b>'+r.c.reduce((x,y)=>x+y)+'</b></td></tr>').join("")||'<tr><td colspan="5" style="color:var(--muted)">Aún no hay acreditaciones.</td></tr>';
   if(!users){$("#uTbl tbody").innerHTML='<tr><td colspan="4" style="color:var(--muted)">Cargando…</td></tr>';return}
   const roleTxt=r=>r==="admin"?'<span class="tag aut">Administrador/a</span>':'<span class="tag hoy">Acreditador/a</span>';
-  $("#uTbl tbody").innerHTML=users.builtin.map(u=>'<tr><td><b>'+esc(u.name)+'</b></td><td>'+roleTxt(u.role)+'</td><td><span class="s" style="color:var(--muted)">Definido en Vercel ('+esc(u.env)+')</span></td><td></td></tr>').join("")+
-    users.users.map(u=>'<tr><td><b>'+esc(u.name)+'</b>'+(u.uid===MYUID?' <span class="tag">tú</span>':'')+'</td><td>'+roleTxt(u.role)+'</td><td><span class="codepill">'+esc(u.code)+'</span> <button class="link" data-ucopy="'+esc(u.code)+'">Copiar</button></td><td style="text-align:right"><button class="btn danger sm" data-udel="'+esc(u.id)+'" data-uname="'+esc(u.name)+'">Desactivar</button></td></tr>').join("")||'';
+  $("#uTbl tbody").innerHTML=users.builtin.map(u=>'<tr><td class="u-name"><b>'+esc(u.name)+'</b></td><td>'+roleTxt(u.role)+'</td><td><span class="s" style="color:var(--muted)">Definido en Vercel ('+esc(u.env)+')</span></td><td></td></tr>').join("")+
+    users.users.map(u=>'<tr><td class="u-name"><b>'+esc(u.name)+'</b>'+(u.uid===MYUID?' <span class="tag">tú</span>':'')+'</td><td>'+roleTxt(u.role)+'</td><td><span class="codepill">'+esc(u.code)+'</span> <button class="link" data-ucopy="'+esc(u.code)+'">Copiar</button></td><td class="u-act" style="text-align:right"><button class="btn danger sm" data-udel="'+esc(u.id)+'" data-uname="'+esc(u.name)+'">Desactivar</button></td></tr>').join("")||'';
   if(!users.users.length)$("#uTbl tbody").insertAdjacentHTML("beforeend",'<tr><td colspan="4" style="color:var(--muted)">Todavía no hay integrantes. Agrega a quienes acreditarán en la puerta.</td></tr>');
 }
 $("#uForm").addEventListener("submit",async e=>{

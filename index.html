@@ -418,8 +418,18 @@ let people=new Map();        // id -> doc data
 let index=[];                // search index
 let day=1, view="acreditar", sel=0, lastResults=[];
 let canWrite=true, isAdmin=false;
-const todayDay=(DAYS.find(d=>d.date===todayISO())||{}).n||null;
-day=todayDay||LS.get("acr_day",1);
+// Jornada preseleccionada según la fecha real: antes del encuentro, el primer día;
+// durante, el día en curso; después, el último. Se puede cambiar a mano (solo en esta sesión).
+let todayDay=null;
+function defaultDay(){
+  const t=todayISO();todayDay=(DAYS.find(d=>d.date===t)||{}).n||null;
+  if(todayDay)return todayDay;
+  return t<DAYS[0].date?DAYS[0].n:DAYS[DAYS.length-1].n;
+}
+let autoDay=defaultDay();
+day=autoDay;
+// Si la app queda abierta y cambia la fecha (p. ej. pasa la medianoche), avanza sola a la jornada que corresponde.
+setInterval(()=>{const nd=defaultDay();if(nd!==autoDay){autoDay=nd;day=nd;renderAll();toast("Se cambió a la jornada del "+DAYS[nd-1].long)}},60000);
 let MYNAME=LS.get("acr_name",""), MYUID=LS.get("acr_uid","");
 const station=()=>MYNAME||"—";
 
@@ -719,7 +729,7 @@ function toast(msg,o={}){
 function renderDays(){
   $("#days").innerHTML=DAYS.map(d=>'<button data-d="'+d.n+'" class="'+(d.n===day?'on':'')+'">'+d.short+(d.n===todayDay?'<span class="today">HOY</span>':'')+'</button>').join("");
 }
-$("#days").addEventListener("click",e=>{const b=e.target.closest("[data-d]");if(!b)return;day=+b.dataset.d;LS.set("acr_day",day);renderAll();if(view==="acreditar")$("#q").focus()});
+$("#days").addEventListener("click",e=>{const b=e.target.closest("[data-d]");if(!b)return;day=+b.dataset.d;renderAll();if(view==="acreditar")$("#q").focus()});
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(!b)return;view=b.dataset.v;
   document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x===b));
   ["acreditar","lista","importar","equipo"].forEach(v=>$("#v-"+v).classList.toggle("hidden",v!==view));
@@ -731,7 +741,7 @@ function renderBanners(){
   if(todayDay&&day!==todayDay)b.push('<div class="banner warn">Estás acreditando para la jornada del <b>&nbsp;'+esc(DAYS[day-1].long)+'&nbsp;</b>, pero hoy es '+esc(DAYS[todayDay-1].long)+'.&nbsp;<button class="link" id="goToday">Cambiar a hoy</button></div>');
   if(loaded&&people.size===0&&isAdmin)b.push('<div class="banner info">La lista está vacía. Ve a <b>&nbsp;Importar inscritos&nbsp;</b> para cargar las planillas que enviaron las instituciones.</div>');
   $("#banners").innerHTML=b.join("");
-  const gt=$("#goToday");if(gt)gt.onclick=()=>{day=todayDay;LS.set("acr_day",day);renderAll()};
+  const gt=$("#goToday");if(gt)gt.onclick=()=>{day=todayDay;renderAll()};
 }
 function setSync(kind,txt){$("#dot").className="dot "+kind;$("#syncTxt").textContent=txt}
 

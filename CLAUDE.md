@@ -8,6 +8,7 @@ App de acreditación del III Encuentro de Organismos Fiscalizadores del Estado (
 - Redis: `acr:people` (hash id → persona JSON), `acr:asis:d1|d2|d3` (hash id → {t, p}), `acr:ver` (contador). Prefijo configurable con `EVENT_KEY`.
 - Acreditar usa `HSETNX` → dos puestos que acreditan a la misma persona cuentan una vez.
 - Sincronización adaptativa (`scheduleSync`): cada 2,5 s con actividad o cambios recientes, 8 s tras 2 min sin uso, 20 s tras 10 min, y nada con la pestaña oculta (salvo registros pendientes). Cuida el tope mensual de comandos del plan gratuito de Upstash.
+- Selección múltiple en Acreditar (`picked` Set): se mantiene entre búsquedas, se limpia sola si otro puesto acredita a alguien seleccionado; `checkInPicked` encola un checkin por persona y ofrece un único Deshacer.
 - Cola offline (`outbox` en localStorage) solo para checkin / undo / create; editar, eliminar, importar y borrar requieren conexión.
 - Identidad: `whoAmI(code)` → {role, name, uid}. `ADMIN_CODE`/`ADMIN_NAME` (env) = admin principal; códigos personales en `acr:users` (hash sha256(prefijo:código normalizado) → {name, role, code}), gestionados desde la pestaña Equipo (`userAdd`/`userDel`, `GET /api/users`). `ACCESS_CODE` = código general heredado sin identidad.
 - Quién acredita lo fija el servidor (`cleanRec` usa `who.name`/`who.uid`); el cliente solo aporta la hora.

@@ -96,9 +96,29 @@ kbd{font:600 12px ui-monospace,monospace;background:#fff;border:1px solid var(--
 
 /* Results */
 .results{display:flex;flex-direction:column;gap:8px}
-.row{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;background:#fff;border:2px solid transparent;border-radius:12px;padding:12px 16px;box-shadow:var(--shadow)}
+.row{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"pick main act";gap:14px;cursor:default;align-items:center;background:#fff;border:2px solid transparent;border-radius:12px;padding:12px 16px;box-shadow:var(--shadow)}
 .row.sel{border-color:var(--accent)}
 .row.done{background:#f7fcf9}
+.row>.main{grid-area:main;min-width:0}.row>.act{grid-area:act}.row>.pick{grid-area:pick}
+.pick{width:30px;display:flex;align-items:center;justify-content:center;align-self:stretch}
+.pick input{appearance:none;-webkit-appearance:none;width:26px;height:26px;border:2px solid #b7c4d8;border-radius:7px;background:#fff;cursor:pointer;display:grid;place-content:center;margin:0}
+.pick input:hover{border-color:var(--ok)}
+.pick input:checked{background:var(--ok);border-color:var(--ok)}
+.pick input:checked::after{content:"";width:7px;height:13px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.row.pending{cursor:pointer}
+.row.picked{border-color:var(--ok);background:#f2fbf6}
+.resbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:14px;margin:0 2px 8px}
+.resbar .btn{font-size:14px}
+.pickbar{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:70;width:min(860px,calc(100% - 24px));background:#0f2447;color:#fff;border-radius:16px;box-shadow:0 14px 40px rgba(10,20,40,.35);padding:12px 14px 12px 18px;display:flex;align-items:center;gap:14px;animation:up .18s ease-out}
+.pickbar .who{flex:1;min-width:0}
+.pickbar .who b{font-size:17px}
+.pickbar .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;max-height:64px;overflow:auto}
+.pickbar .chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.13);border-radius:999px;padding:3px 4px 3px 10px;font-size:13.5px;white-space:nowrap}
+.pickbar .chip button{border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:50%;width:20px;height:20px;line-height:18px;padding:0;font-size:13px}
+.pickbar .btn.go{font-size:17px;padding:12px 18px;white-space:nowrap}
+.pickbar .clear{border:0;background:none;color:rgba(255,255,255,.8);text-decoration:underline;font-weight:600;white-space:nowrap}
+body.picking main{padding-bottom:calc(var(--pbh,120px) + 50px)}
+body.picking #toasts{bottom:calc(var(--pbh,100px) + 30px)}
 .row .nm{font-size:20px;font-weight:700;line-height:1.2;cursor:pointer}
 .row .nm:hover{text-decoration:underline;text-decoration-color:#b8c6da}
 .row .meta{color:var(--muted);font-size:15px;margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 14px}
@@ -201,7 +221,8 @@ button,.btn,.link,.days button,nav button{touch-action:manipulation}
 }
 @media (max-width:860px){
   .two,.grid2{grid-template-columns:1fr}
-  .row{grid-template-columns:1fr} .act{align-items:stretch;min-width:0} #q{font-size:20px}
+  .row{grid-template-columns:auto 1fr;grid-template-areas:"pick main" "act act"} .act{align-items:stretch;min-width:0} #q{font-size:20px}
+  .row .pick{align-self:start;padding-top:2px}
   .act .btn.go{padding:14px 22px}
   .okbadge{justify-content:center}
   .act .link{align-self:center;padding:6px 10px}
@@ -297,6 +318,10 @@ button,.btn,.link,.days button,nav button{touch-action:manipulation}
   .modal .ft>div:first-child:empty{display:none}
 
   #toasts{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));transform:none}
+  .pickbar{bottom:0;left:0;right:0;width:100%;transform:none;border-radius:16px 16px 0 0;flex-wrap:wrap;padding:12px 14px calc(12px + env(safe-area-inset-bottom))}
+  .pickbar .who{flex:1 1 100%}
+  .pickbar .btn.go{flex:1}
+  body.picking #toasts{bottom:calc(var(--pbh,150px) + 10px)}
   .toast{width:100%;justify-content:space-between;font-size:15px}
   .login form{padding:24px 20px 20px}
   .login h1{font-size:18px}
@@ -349,6 +374,7 @@ button,.btn,.link,.days button,nav button{touch-action:manipulation}
       <span>Escribe cualquier parte del nombre o la institución (ej. <i>gonz sii</i>).<span class="kbhint"> <kbd>↑</kbd><kbd>↓</kbd> para elegir, <kbd>Enter</kbd> para acreditar.</span></span>
       <button class="btn" id="btnAdd">+ Agregar persona no inscrita</button>
     </div>
+    <div id="resbar" class="resbar hidden"></div>
     <div id="results" class="results"></div>
     <div id="recentWrap">
       <div class="section-t"><span>Últimos acreditados</span><span id="recentCount"></span></div>
@@ -481,6 +507,7 @@ button,.btn,.link,.days button,nav button{touch-action:manipulation}
 </form></div>
 <datalist id="instList"></datalist>
 <div id="modalRoot"></div>
+<div id="pickbar" class="pickbar hidden" role="region" aria-label="Personas seleccionadas"></div>
 <div id="toasts"></div>
 
 <script>
@@ -725,26 +752,62 @@ function renderStats(){
 function renderResults(){
   const q=$("#q").value;$("#qclr").classList.toggle("hidden",!q);
   const box=$("#results");
-  if(!clean(q)){box.innerHTML="";lastResults=[];$("#recentWrap").classList.remove("hidden");renderRecent();return}
+  if(!clean(q)){box.innerHTML="";lastResults=[];$("#resbar").classList.add("hidden");$("#recentWrap").classList.remove("hidden");renderRecent();renderPickbar();return}
   $("#recentWrap").classList.add("hidden");
   const res=search(q);lastResults=res.slice(0,40);
   if(sel>=lastResults.length)sel=Math.max(0,lastResults.length-1);
   const tk=tokens(q);
+  const pend=lastResults.filter(e=>!asisOf(e.p));
+  const allPicked=pend.length&&pend.every(e=>picked.has(e.id));
+  $("#resbar").classList.toggle("hidden",!(canWrite&&pend.length>=2));
+  $("#resbar").innerHTML='<span>'+res.length+' resultado'+(res.length===1?'':'s')+' · '+pend.length+' por acreditar</span>'+
+    '<button class="btn sm" id="pickAll">'+(allPicked?'Quitar selección de estos '+pend.length:'Seleccionar los '+pend.length+' pendientes')+'</button>';
+  const pa=$("#pickAll");if(pa)pa.onclick=()=>{pend.forEach(e=>allPicked?picked.delete(e.id):picked.add(e.id));renderResults();$("#q").focus()};
   if(!res.length){
+    renderPickbar();
     box.innerHTML='<div class="empty"><h3>No hay nadie en la lista con “'+esc(clean(q))+'”</h3>Prueba con otra parte del nombre, el apellido o la sigla de la institución.<br>'+
       (canWrite?'<button class="btn primary" id="emptyAdd">+ Agregar y acreditar a esta persona</button>':'')+'</div>';
     const b=$("#emptyAdd");if(b)b.onclick=()=>openPerson(null,clean(q));return;
   }
   box.innerHTML=lastResults.map((e,i)=>{
     const p=e.p,a=asisOf(p);
-    return '<div class="row'+(i===sel?' sel':'')+(a?' done':'')+'" data-i="'+i+'">'+
-      '<div><div class="nm" data-edit="'+esc(e.id)+'" title="">'+hl(p.nombre,tk)+'</div>'+
+    const pk=!a&&picked.has(e.id);
+    return '<div class="row'+(i===sel?' sel':'')+(a?' done':(canWrite?' pending':''))+(pk?' picked':'')+'" data-i="'+i+'">'+
+      '<div class="pick">'+(!a&&canWrite?'<input type="checkbox" data-pick="'+esc(e.id)+'"'+(pk?' checked':'')+' aria-label="Seleccionar a '+esc(p.nombre)+'">':'')+'</div>'+
+      '<div class="main"><div class="nm" data-edit="'+esc(e.id)+'" title="">'+hl(p.nombre,tk)+'</div>'+
       '<div class="meta"><span><b>'+hl(p.inst||"—",tk)+'</b>'+(e.ii?' · '+esc(e.ii.ab[0]):'')+'</span>'+(p.cargo?'<span>'+hl(p.cargo,tk)+'</span>':'')+(p.rut?'<span>RUT '+esc(p.rut)+'</span>':'')+'</div>'+
       '<div class="tags">'+tagsHTML(p)+'</div></div>'+
       '<div class="act">'+(a?
         '<div class="okbadge">✓ Acreditado <small>'+hhmm(a.t)+(a.p?' · '+esc(a.p):'')+'</small></div>'+(canWrite?'<button class="link" data-undo="'+esc(e.id)+'">Deshacer</button>':''):
         (canWrite?'<button class="btn go" data-go="'+esc(e.id)+'">Acreditar</button>':'<span class="s">Pendiente</span>'))+
       '</div></div>'}).join("")+(res.length>lastResults.length?'<div class="more">'+(res.length-lastResults.length)+' resultados más — sigue escribiendo para acotar.</div>':'');
+  renderPickbar();
+}
+/* ---------- Selección múltiple: acreditar a un grupo de una vez ---------- */
+const picked=new Set();
+function renderPickbar(){
+  // quita de la selección a quien ya fue acreditado (por este u otro puesto) o ya no existe
+  for(const id of [...picked]){const p=people.get(id);if(!p||asisOf(p))picked.delete(id)}
+  const bar=$("#pickbar"),n=picked.size,show=n>0&&view==="acreditar"&&canWrite;
+  bar.classList.toggle("hidden",!show);document.body.classList.toggle("picking",show);
+  if(!show){bar.innerHTML="";return}
+  const ps=[...picked].map(id=>[id,people.get(id)]);
+  bar.innerHTML='<div class="who"><b>'+n+' seleccionado'+(n===1?'':'s')+'</b> <span style="opacity:.75;font-size:14px">· <span class="kbhint"><kbd style="color:#14223a">Enter</kbd> acredita a todos · </span></span><button class="clear" id="pickClear">Quitar selección</button>'+
+    '<div class="chips">'+ps.map(([id,p])=>'<span class="chip">'+esc(p.nombre)+'<button data-unpick="'+esc(id)+'" aria-label="Quitar a '+esc(p.nombre)+'">✕</button></span>').join("")+'</div></div>'+
+    '<button class="btn go" id="pickGo">Acreditar a '+(n===1?'1 persona':'los '+n)+'</button>';
+  $("#pickClear").onclick=()=>{picked.clear();renderResults();$("#q").focus()};
+  $("#pickGo").onclick=checkInPicked;
+  document.documentElement.style.setProperty("--pbh",bar.offsetHeight+"px");
+}
+function togglePick(id){if(picked.has(id))picked.delete(id);else{const p=people.get(id);if(p&&!asisOf(p))picked.add(id)}renderResults()}
+function checkInPicked(){
+  if(!canWrite||!picked.size)return;
+  const done=[],t=Date.now();
+  for(const id of picked){const p=people.get(id);if(!p||asisOf(p))continue;Store.checkin(id,dk(),{t,p:station(),u:MYUID});done.push(id)}
+  picked.clear();$("#q").value="";sel=0;renderResults();$("#q").focus();
+  if(!done.length)return;
+  const first=people.get(done[0]);
+  toast(done.length===1?"✓ "+first.nombre+" acreditado/a":"✓ "+done.length+" personas acreditadas",{kind:"ok",undo:()=>done.forEach(id=>undoCheckIn(id,true))});
 }
 function renderRecent(){
   const arr=[];for(const [id,p] of people){const a=asisOf(p);if(a)arr.push({id,p,a})}
@@ -769,15 +832,22 @@ function undoCheckIn(id,silent){
 document.addEventListener("click",e=>{
   const g=e.target.closest("[data-go]");if(g){checkIn(g.dataset.go);return}
   const u=e.target.closest("[data-undo]");if(u){undoCheckIn(u.dataset.undo);return}
-  const ed=e.target.closest("[data-edit]");if(ed){if(isAdmin)openPerson(ed.dataset.edit);return}
-  const r=e.target.closest(".row[data-i]");if(r&&!e.target.closest("button")){sel=+r.dataset.i;renderResults()}
+  const ed=e.target.closest("[data-edit]");if(ed&&isAdmin){openPerson(ed.dataset.edit);return}
+  const pk=e.target.closest("[data-pick]");if(pk){e.preventDefault();togglePick(pk.dataset.pick);return}
+  const up=e.target.closest("[data-unpick]");if(up){picked.delete(up.dataset.unpick);renderResults();return}
+  const r=e.target.closest(".row[data-i]");if(r&&!e.target.closest("button")){
+    const it=lastResults[+r.dataset.i];
+    // tocar la tarjeta de alguien pendiente la marca/desmarca (útil en celular y tablet)
+    if(it&&canWrite&&!asisOf(it.p)){sel=+r.dataset.i;togglePick(it.id);return}
+    sel=+r.dataset.i;renderResults()}
 });
 $("#q").addEventListener("input",()=>{sel=0;renderResults()});
 $("#q").addEventListener("keydown",e=>{
   if(e.key==="ArrowDown"){e.preventDefault();sel=Math.min(sel+1,lastResults.length-1);renderResults();scrollSel()}
   else if(e.key==="ArrowUp"){e.preventDefault();sel=Math.max(sel-1,0);renderResults();scrollSel()}
+  else if(e.key==="Enter"&&picked.size){e.preventDefault();checkInPicked()}
   else if(e.key==="Enter"){e.preventDefault();const r=lastResults[sel];if(r){if(asisOf(r.p))toast(r.p.nombre+" ya estaba acreditado/a ("+hhmm(asisOf(r.p).t)+")");else checkIn(r.id)}else if(clean($("#q").value)&&canWrite)openPerson(null,clean($("#q").value))}
-  else if(e.key==="Escape"){$("#q").value="";sel=0;renderResults()}
+  else if(e.key==="Escape"){if(!$("#q").value&&picked.size)picked.clear();$("#q").value="";sel=0;renderResults()}
 });
 function scrollSel(){const el=document.querySelector(".row.sel");if(el)el.scrollIntoView({block:"nearest"})}
 $("#qclr").onclick=()=>{$("#q").value="";renderResults();$("#q").focus()};
@@ -1118,6 +1188,7 @@ $("#uCopyAll").onclick=async()=>{
 let rt=null;
 function onData(){buildIndex();clearTimeout(rt);rt=setTimeout(renderAll,30)}
 function renderAll(){
+  if(view!=="acreditar")renderPickbar();
   if(!isAdmin&&view!=="acreditar"){view="acreditar";["lista","importar","equipo"].forEach(v=>$("#v-"+v).classList.add("hidden"));$("#v-acreditar").classList.remove("hidden");document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x.dataset.v==="acreditar"))}
   if(view==="equipo")renderEquipo();
   renderDays();renderBanners();renderStats();instOptions();
